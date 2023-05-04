@@ -1,7 +1,7 @@
 FROM --platform=linux/amd64 ubuntu:22.04
 
-LABEL maintainer="messeb"
-    
+LABEL maintainer="migarl"
+
 ENV ANDROID_SDK_TOOLS_VERSION 9477386
 ENV ANDROID_SDK_TOOLS_CHECKSUM bd1aa17c7ef10066949c88dc6c9c8d536be27f992a1f3b5a584f9bd2ba5646a0
 
@@ -29,7 +29,7 @@ RUN apt-get -qq update \
     lldb \
     git > /dev/null \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-   
+
 # Download and unzip Android SDK Tools
 RUN curl -s https://dl.google.com/android/repository/commandlinetools-linux-${ANDROID_SDK_TOOLS_VERSION}_latest.zip > /tools.zip \
     && echo "$ANDROID_SDK_TOOLS_CHECKSUM ./tools.zip" | sha256sum -c \
@@ -42,19 +42,27 @@ RUN mkdir -p $ANDROID_HOME/licenses/ \
     && echo "84831b9409646a918e30573bab4c9c91346d8abd\n504667f4c0de7af1a06de9f4b1727b84351f2910" > $ANDROID_HOME/licenses/android-sdk-preview-license --licenses \
     && yes | $ANDROID_HOME/cmdline-tools/bin/sdkmanager --licenses --sdk_root=${ANDROID_SDK_ROOT}
 
-# Add non-root user 
-RUN groupadd -r mobiledevops \
-    && useradd --no-log-init -r -g mobiledevops mobiledevops \
-    && mkdir -p /home/mobiledevops/.android \
+# Add non-root user
+# RUN groupadd -r mobiledevops \
+#     && useradd --no-log-init -r -g mobiledevops mobiledevops \
+#     && mkdir -p /home/mobiledevops/.android \
+#     && mkdir -p /home/mobiledevops/app \
+#     && touch /home/mobiledevops/.android/repositories.cfg \
+#     && chown --recursive mobiledevops:mobiledevops /home/mobiledevops \
+#     && chown --recursive mobiledevops:mobiledevops /home/mobiledevops/app \
+#     && chown --recursive mobiledevops:mobiledevops $ANDROID_HOME
+
+RUN mkdir -p /home/mobiledevops/.android \
     && mkdir -p /home/mobiledevops/app \
     && touch /home/mobiledevops/.android/repositories.cfg \
-    && chown --recursive mobiledevops:mobiledevops /home/mobiledevops \
-    && chown --recursive mobiledevops:mobiledevops /home/mobiledevops/app \
-    && chown --recursive mobiledevops:mobiledevops $ANDROID_HOME
+    && chown --recursive 1000:1000 /home/mobiledevops \
+    && chown --recursive 1000:1000 /home/mobiledevops/app \
+    && chown --recursive 1000:1000 $ANDROID_HOME
 
-# Set non-root user as default      
+# Set non-root user as default
 ENV HOME /home/mobiledevops
-USER mobiledevops
+# USER mobiledevops
+USER 1000
 WORKDIR $HOME/app
 
 # Install Android packages
